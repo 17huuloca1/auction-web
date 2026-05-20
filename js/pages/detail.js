@@ -306,6 +306,15 @@ function renderHistory() {
   }
 }
 
+function _buildChartGradient(ctx, height) {
+  // Gradient nền — đậm trên đỉnh, mờ dần xuống dưới
+  const g = ctx.createLinearGradient(0, 0, 0, height || 280);
+  g.addColorStop(0, 'rgba(37, 99, 235, 0.32)');
+  g.addColorStop(0.55, 'rgba(37, 99, 235, 0.10)');
+  g.addColorStop(1, 'rgba(37, 99, 235, 0.00)');
+  return g;
+}
+
 function renderChart() {
   const cnv = document.getElementById('priceChart');
   if (!cnv) return;
@@ -315,54 +324,103 @@ function renderChart() {
   const points = [];
   points.push({ x: a.startTime, y: a.startingPrice });
   for (const b of bids) points.push({ x: b.ts, y: b.amount });
-  // append current state if last point < now and auction is running
   if (a.status === 'RUNNING' && (points.at(-1).x < Date.now())) {
     points.push({ x: Date.now(), y: a.currentBid });
   }
+
+  const ctx = cnv.getContext('2d');
+  const h = cnv.parentElement?.clientHeight || 280;
 
   const dataset = {
     label: 'Giá đấu (₫)',
     data: points,
     borderColor: '#2563eb',
-    backgroundColor: 'rgba(37,99,235,.15)',
+    backgroundColor: _buildChartGradient(ctx, h),
     fill: true,
-    tension: 0.25,
-    stepped: 'before',
-    borderWidth: 2,
-    pointRadius: 3,
+    tension: 0.42,
+    cubicInterpolationMode: 'monotone',
+    borderWidth: 3,
+    pointRadius: 0,
+    pointHoverRadius: 7,
+    pointHoverBackgroundColor: '#ffffff',
+    pointHoverBorderColor: '#2563eb',
+    pointHoverBorderWidth: 3,
+    borderJoinStyle: 'round',
+    borderCapStyle: 'round',
   };
 
   if (_chart) {
     _chart.data.datasets[0].data = points;
+    _chart.data.datasets[0].backgroundColor = _buildChartGradient(ctx, h);
     _chart.update('none');
     return;
   }
 
-  _chart = new Chart(cnv.getContext('2d'), {
+  _chart = new Chart(ctx, {
     type: 'line',
     data: { datasets: [dataset] },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 300 },
+      animation: { duration: 600, easing: 'easeOutCubic' },
+      interaction: { mode: 'index', intersect: false },
+      layout: { padding: { top: 8, right: 8, bottom: 0, left: 0 } },
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: 'rgba(17, 24, 39, 0.96)',
+          titleColor: '#f9fafb',
+          bodyColor: '#e5e7eb',
+          padding: 12,
+          cornerRadius: 10,
+          displayColors: false,
+          titleFont: { family: 'Be Vietnam Pro', weight: '600', size: 13 },
+          bodyFont: { family: 'Be Vietnam Pro', weight: '700', size: 16 },
           callbacks: {
-            title: (items) => fmtDate(items[0].parsed.x),
-            label: (item) => fmtVND(item.parsed.y),
+            title: (items) => '🕒 ' + fmtDate(items[0].parsed.x),
+            label: (item) => '💰 ' + fmtVND(item.parsed.y),
           },
         },
       },
       scales: {
         x: {
           type: 'time',
-          time: { unit: 'minute', tooltipFormat: 'dd/MM HH:mm:ss', displayFormats: { minute: 'HH:mm', hour: 'HH:mm', day: 'dd/MM' } },
+          time: {
+            unit: 'minute',
+            tooltipFormat: 'dd/MM HH:mm:ss',
+            displayFormats: { second: 'HH:mm:ss', minute: 'HH:mm', hour: 'HH:mm', day: 'dd/MM' },
+          },
           adapters: { date: {} },
+          border: { display: false },
+          grid: { display: false, drawTicks: false },
+          ticks: {
+            color: '#94a3b8',
+            font: { family: 'Be Vietnam Pro', size: 11 },
+            maxTicksLimit: 6,
+            padding: 6,
+          },
         },
         y: {
           beginAtZero: false,
-          ticks: { callback: (v) => Number(v).toLocaleString('vi-VN') },
+          border: { display: false },
+          grid: {
+            color: 'rgba(148, 163, 184, 0.15)',
+            drawTicks: false,
+            tickLength: 0,
+          },
+          ticks: {
+            color: '#94a3b8',
+            font: { family: 'Be Vietnam Pro', size: 11 },
+            maxTicksLimit: 5,
+            padding: 10,
+            callback: (v) => {
+              const n = Number(v);
+              if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + ' tỷ';
+              if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + ' tr';
+              if (n >= 1_000) return (n / 1_000).toFixed(0) + 'k';
+              return n.toLocaleString('vi-VN');
+            },
+          },
         },
       },
     },

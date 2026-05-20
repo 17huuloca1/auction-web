@@ -8,7 +8,7 @@
 
 import { getSeedUsers, getSeedAuctions, getSeedBids } from './seed.js';
 
-const STORAGE_KEY = 'auction_db_v1';
+const STORAGE_KEY = 'auction_db_v2';
 const BC_NAME = 'auction_events';
 
 // --- Domain model classes (OOP) ----------------------------------
@@ -23,6 +23,9 @@ export class User extends Entity {
     this.password = data.password;
     this.fullname = data.fullname;
     this.role = data.role;
+    this.email = data.email || '';
+    this.phone = data.phone || '';
+    this.balance = Number(data.balance) || 0;
     this.createdAt = data.createdAt ?? Date.now();
   }
 }
@@ -107,16 +110,18 @@ class Store {
     try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
     if (raw) {
       const data = JSON.parse(raw);
-      this.users = data.users || [];
+      this.users = (data.users || []).map((u) => ({ email: '', phone: '', balance: 0, ...u }));
       this.auctions = data.auctions || [];
       this.bids = data.bids || [];
       this.autoBids = data.autoBids || [];
+      this.transactions = data.transactions || [];
       this.currentUserId = data.currentUserId || null;
     } else {
       this.users = getSeedUsers();
       this.auctions = getSeedAuctions();
       this.bids = getSeedBids();
       this.autoBids = [];
+      this.transactions = [];
       this.currentUserId = null;
       this._persist();
     }
@@ -128,6 +133,7 @@ class Store {
       auctions: this.auctions,
       bids: this.bids,
       autoBids: this.autoBids,
+      transactions: this.transactions,
       currentUserId: this.currentUserId,
     };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
@@ -138,6 +144,7 @@ class Store {
     this.auctions = getSeedAuctions();
     this.bids = getSeedBids();
     this.autoBids = [];
+    this.transactions = [];
     this.currentUserId = null;
     this._persist();
     this._broadcast({ type: 'full-reset' });
@@ -154,20 +161,74 @@ class Store {
     return u;
   }
 
-  register({ username, password, fullname, role }) {
+  register({ username, password, fullname, role, email = '', phone = '' }) {
     if (this.users.some((u) => u.username === username))
       throw new Error('Tên đăng nhập đã tồn tại');
     if (!['bidder', 'seller'].includes(role))
       throw new Error('Vai trò không hợp lệ');
     const user = new User({
       id: 'u_' + Math.random().toString(36).slice(2, 9),
-      username, password, fullname, role, createdAt: Date.now(),
+      username, password, fullname, role, email, phone,
+      balance: 0, createdAt: Date.now(),
     });
     this.users.push(user);
     this.currentUserId = user.id;
     this._persist();
     this.bus.emit('auth', user);
     return user;
+  }
+
+  // ---- Account management ----
+  updateProfile({ userId, fullname, email, phone }) {
+    const u = this.getUser(userId);
+    if (!u) throw new Error('Không tìm thấy người dùng');
+    if (fullname !== undefined) u.fullname = String(fullname).trim() || u.fullname;
+    if (email !== undefined) u.email = String(email).trim();
+    if (phone !== undefined) u.phone = String(phone).trim();
+    this._persist();
+    this._announce('change');
+    this.bus.emit('auth', u);
+    return u;
+  }
+
+  changePassword({ userId, oldPassword, newPassword }) {
+    const u = this.getUser(userId);
+    if (!u) throw new Error('Không tìm thấy người dùng');
+    if (u.password !== oldPassword) throw new Error('Mật khẩu hiện tại không đúng');
+    if (!newPassword || String(newPassword).length < 4)
+      throw new Error('Mật khẩu mới phải có ít nhất 4 ký tự');
+    u.password = String(newPassword);
+    this._persist();
+    this._announce('change');
+    return u;
+  }
+
+  // ---- Wallet / Transactions ----
+  topUp({ userId, amount, method = 'MOMO' }) {
+    const u = this.getUser(userId);
+    if (!u) throw new Error('Không tìm thấy người dùng');
+    const n = Number(amount);
+    if (!Number.isFinite(n) || n <= 0) throw new Error('Số tiền nạp không hợp lệ');
+    if (n < 10000) throw new Error('Số tiền nạp tối thiểu là 10.000 ₫');
+    u.balance = (Number(u.balance) || 0) + n;
+    const tx = {
+      id: 'tx_' + Math.random().toString(36).slice(2, 9),
+      userId, type: 'TOP_UP', method,
+      amount: n, balanceAfter: u.balance,
+      ts: Date.now(),
+      note: 'Nạp tiền vào tài khoản qua ' + method,
+    };
+    this.transactions.push(tx);
+    this._persist();
+    this._announce('change');
+    this.bus.emit('auth', u);
+    return tx;
+  }
+
+  transactionsByUser(userId) {
+    return this.transactions
+      .filter((t) => t.userId === userId)
+      .sort((a, b) => b.ts - a.ts);
   }
 
   logout() {

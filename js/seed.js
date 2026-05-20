@@ -11,6 +11,9 @@ export function getSeedUsers() {
       password: 'admin',
       fullname: 'Quản trị viên',
       role: 'admin',
+      email: 'admin@auctionvn.demo',
+      phone: '0901234567',
+      balance: 0,
       createdAt: Date.now() - 30 * 86400e3,
     },
     {
@@ -19,6 +22,9 @@ export function getSeedUsers() {
       password: 'seller',
       fullname: 'Nguyễn Văn Bán',
       role: 'seller',
+      email: 'nguyenvanban@gmail.com',
+      phone: '0912345678',
+      balance: 5_000_000,
       createdAt: Date.now() - 20 * 86400e3,
     },
     {
@@ -27,6 +33,9 @@ export function getSeedUsers() {
       password: 'seller',
       fullname: 'Lê Thị Galleria',
       role: 'seller',
+      email: 'galleria@art.vn',
+      phone: '0987654321',
+      balance: 12_000_000,
       createdAt: Date.now() - 15 * 86400e3,
     },
     {
@@ -35,6 +44,9 @@ export function getSeedUsers() {
       password: 'bidder',
       fullname: 'Trần Văn Đấu',
       role: 'bidder',
+      email: 'tranvandau@gmail.com',
+      phone: '0938112233',
+      balance: 50_000_000,
       createdAt: Date.now() - 10 * 86400e3,
     },
     {
@@ -43,6 +55,9 @@ export function getSeedUsers() {
       password: 'bidder',
       fullname: 'Phạm Thị Mua',
       role: 'bidder',
+      email: 'phammua@gmail.com',
+      phone: '0945667788',
+      balance: 35_000_000,
       createdAt: Date.now() - 8 * 86400e3,
     },
     {
@@ -51,6 +66,9 @@ export function getSeedUsers() {
       password: 'bidder',
       fullname: 'Vũ Minh Trí',
       role: 'bidder',
+      email: 'vuminhtri@gmail.com',
+      phone: '0961122334',
+      balance: 80_000_000,
       createdAt: Date.now() - 6 * 86400e3,
     },
   ];
