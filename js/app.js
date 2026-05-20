@@ -3,12 +3,13 @@
 // ====================================================================
 
 import { store } from './store.js';
-import { toast, openModal, closeModal } from './utils.js';
+import { toast, openModal, closeModal, fmtVND } from './utils.js';
 import { renderHome } from './pages/home.js';
 import { renderDetail } from './pages/detail.js';
 import { renderSeller } from './pages/seller.js';
 import { renderAdmin } from './pages/admin.js';
 import { renderProfile } from './pages/profile.js';
+import { renderSettings } from './pages/settings.js';
 
 store.setToastFn(toast);
 
@@ -22,6 +23,7 @@ function parseHash() {
   if (parts[0] === 'seller') return { route: 'seller' };
   if (parts[0] === 'admin') return { route: 'admin' };
   if (parts[0] === 'profile') return { route: 'profile' };
+  if (parts[0] === 'settings') return { route: 'settings' };
   return { route: 'home' };
 }
 
@@ -33,6 +35,7 @@ function navigate() {
   if (route === 'seller') return renderSeller(app);
   if (route === 'admin') return renderAdmin(app);
   if (route === 'profile') return renderProfile(app);
+  if (route === 'settings') return renderSettings(app);
   return renderHome(app);
 }
 
@@ -61,6 +64,12 @@ const userInfo = document.getElementById('userInfo');
 const authActions = document.getElementById('authActions');
 const userName = document.getElementById('userName');
 const userRoleBadge = document.getElementById('userRoleBadge');
+const userBalanceAmt = document.getElementById('userBalanceAmt');
+const topupBtn = document.getElementById('topupBtn');
+const topupForm = document.getElementById('topupForm');
+const topupAmountInput = document.getElementById('topupAmount');
+const topupSummary = document.getElementById('topupSummary');
+const topupCurrentBalance = document.getElementById('topupCurrentBalance');
 const loginForm = document.getElementById('loginForm');
 const registerForm = document.getElementById('registerForm');
 
@@ -133,6 +142,7 @@ function syncAuthUI() {
     userName.textContent = u.fullname;
     userRoleBadge.textContent = u.role;
     userRoleBadge.className = 'role-badge ' + u.role;
+    if (userBalanceAmt) userBalanceAmt.textContent = fmtVND(u.balance || 0);
   }
   document.querySelectorAll('[data-require-role]').forEach((nav) => {
     const required = nav.dataset.requireRole;
@@ -145,6 +155,64 @@ function syncAuthUI() {
 
 store.bus.on('auth', syncAuthUI);
 store.bus.on('change', syncAuthUI);
+
+// Re-render trang hiện tại khi auth thay đổi (đặc biệt cho /profile, /settings)
+store.bus.on('auth', () => {
+  const { route } = parseHash();
+  if (route === 'profile' || route === 'settings') navigate();
+});
+
+// === Top-up modal ===
+topupBtn?.addEventListener('click', () => {
+  const u = store.currentUser();
+  if (!u) { toast('error', 'Chưa đăng nhập', 'Vui lòng đăng nhập trước khi nạp tiền'); return; }
+  topupCurrentBalance.textContent = fmtVND(u.balance || 0);
+  topupAmountInput.value = '';
+  if (topupSummary) topupSummary.textContent = '';
+  document.querySelectorAll('.quick-amt').forEach((b) => b.classList.remove('active'));
+  openModal('topupModal');
+});
+
+document.querySelectorAll('.quick-amt').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const amt = Number(btn.dataset.amount);
+    topupAmountInput.value = amt;
+    document.querySelectorAll('.quick-amt').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    updateTopupSummary();
+  });
+});
+
+topupAmountInput?.addEventListener('input', () => {
+  document.querySelectorAll('.quick-amt').forEach((b) => b.classList.remove('active'));
+  updateTopupSummary();
+});
+
+function updateTopupSummary() {
+  if (!topupSummary) return;
+  const v = Number(topupAmountInput.value);
+  if (!v || v <= 0) { topupSummary.textContent = ''; return; }
+  const u = store.currentUser();
+  const after = (u?.balance || 0) + v;
+  topupSummary.innerHTML = `Số dư sau khi nạp: <strong>${fmtVND(after)}</strong>`;
+}
+
+topupForm?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const u = store.currentUser();
+  if (!u) { toast('error', 'Chưa đăng nhập'); return; }
+  const data = new FormData(topupForm);
+  const amount = Number(data.get('amount'));
+  const method = String(data.get('method'));
+  try {
+    const tx = store.topUp({ userId: u.id, amount, method });
+    toast('success', 'Nạp tiền thành công', '+' + fmtVND(tx.amount) + ' • Số dư mới: ' + fmtVND(tx.balanceAfter));
+    closeModal('topupModal');
+    topupForm.reset();
+  } catch (err) {
+    toast('error', 'Nạp tiền thất bại', err.message);
+  }
+});
 
 // init
 syncAuthUI();

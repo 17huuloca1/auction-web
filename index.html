@@ -24,12 +24,22 @@
       <a href="#" data-route="seller" class="nav-link" data-require-role="seller">Quản lý sản phẩm</a>
       <a href="#" data-route="admin" class="nav-link" data-require-role="admin">Quản trị</a>
       <a href="#" data-route="profile" class="nav-link" data-require-auth="true">Hồ sơ</a>
+      <a href="#" data-route="settings" class="nav-link" data-require-auth="true">Cài đặt</a>
     </nav>
 
     <div class="topbar-right">
       <div class="user-info" id="userInfo" hidden>
-        <span class="role-badge" id="userRoleBadge"></span>
-        <span id="userName"></span>
+        <div class="user-block">
+          <div class="user-name-row">
+            <span class="role-badge" id="userRoleBadge"></span>
+            <span class="user-fullname" id="userName"></span>
+          </div>
+          <div class="user-balance" id="userBalance" title="Số dư trong tài khoản">
+            <span class="coin">💰</span>
+            <span class="amt" id="userBalanceAmt">0 ₫</span>
+          </div>
+        </div>
+        <button class="btn-primary topup-btn" id="topupBtn" title="Nạp tiền vào tài khoản">➕ Nạp tiền</button>
         <button class="btn-ghost" id="logoutBtn">Đăng xuất</button>
       </div>
       <div class="auth-actions" id="authActions">
@@ -162,6 +172,51 @@
             </label>
           </div>
           <button class="btn-primary block" type="submit">Lưu sản phẩm</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP-UP MODAL -->
+  <div class="modal" id="topupModal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>💰 Nạp tiền vào tài khoản</h3>
+        <button class="modal-close" data-close-modal="topupModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="topup-balance-label">Số dư hiện tại</p>
+        <div class="topup-balance" id="topupCurrentBalance">0 ₫</div>
+
+        <form id="topupForm" class="topup-form">
+          <label class="section-label">Chọn nhanh số tiền nạp</label>
+          <div class="quick-amounts">
+            <button type="button" class="quick-amt" data-amount="100000">100.000 ₫</button>
+            <button type="button" class="quick-amt" data-amount="500000">500.000 ₫</button>
+            <button type="button" class="quick-amt" data-amount="1000000">1.000.000 ₫</button>
+            <button type="button" class="quick-amt" data-amount="2000000">2.000.000 ₫</button>
+            <button type="button" class="quick-amt" data-amount="5000000">5.000.000 ₫</button>
+            <button type="button" class="quick-amt" data-amount="10000000">10.000.000 ₫</button>
+          </div>
+
+          <label>Số tiền nạp (VND)
+            <input id="topupAmount" name="amount" type="number" min="10000" step="1000" placeholder="Nhập số tiền (tối thiểu 10.000 ₫)" required />
+          </label>
+
+          <label>Phương thức thanh toán
+            <select name="method" required>
+              <option value="MOMO">Ví Momo</option>
+              <option value="VNPAY">VNPay QR</option>
+              <option value="ATM">Thẻ ATM nội địa</option>
+              <option value="VISA">Thẻ Visa / Mastercard</option>
+              <option value="BANK">Chuyển khoản ngân hàng</option>
+            </select>
+          </label>
+
+          <p class="topup-summary" id="topupSummary"></p>
+
+          <button class="btn-primary block" type="submit">✅ Xác nhận nạp tiền</button>
+          <p class="hint">⚠️ Đây là bản demo, giao dịch được mô phỏng và ghi vào lịch sử giao dịch ngay lập tức.</p>
         </form>
       </div>
     </div>
