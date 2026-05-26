@@ -1,6 +1,22 @@
 // ====================================================================
-// Dữ liệu seed cho hệ thống đấu giá. Bạn có thể chỉnh sửa danh sách
-// dưới đây để đổi sản phẩm, người dùng, phiên đấu giá mẫu.
+//  seed.js — Dữ liệu mẫu (mock database)
+// --------------------------------------------------------------------
+//  Cung cấp dữ liệu ban đầu khi localStorage trống (lần chạy đầu tiên
+//  hoặc sau khi bump STORAGE_KEY). Trong project demo này, seed thay
+//  thế vai trò DAO/Database — đảm bảo có dữ liệu sẵn để test mà không
+//  cần thao tác tạo thủ công.
+//
+//  Bao gồm:
+//   • 6 user mẫu: 1 admin, 2 seller, 3 bidder (đều có balance ban đầu).
+//   • 5 phiên đấu giá phủ đủ trạng thái: RUNNING (đang diễn ra),
+//     OPEN (sắp mở), FINISHED (đã kết thúc).
+//   • Lịch sử bid mẫu cho các phiên RUNNING/FINISHED để biểu đồ giá
+//     có dữ liệu hiển thị ngay.
+//
+//  Lưu ý:
+//   • Thời gian dùng Date.now() tại lúc seed → mỗi lần reset sẽ dịch
+//     khung giờ phiên đấu giá theo thời điểm thực, tránh phiên hết hạn.
+//   • Bạn có thể sửa file này để đổi sản phẩm / user / khung giờ mẫu.
 // ====================================================================
 
 export function getSeedUsers() {

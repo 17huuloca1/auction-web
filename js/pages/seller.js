@@ -1,3 +1,15 @@
+// ====================================================================
+//  pages/seller.js — Trang quản lý sản phẩm cho Seller (3.1.2 + 3.1.6)
+// --------------------------------------------------------------------
+//  Cho phép Seller (người bán):
+//   • Xem danh sách các phiên đấu giá của chính mình.
+//   • Thêm / sửa / xóa phiên đấu giá (CRUD theo yêu cầu 3.1.2).
+//   • Đặt giá khởi điểm, bước giá, thời gian bắt đầu/kết thúc.
+//   • Hủy phiên đang chạy hoặc đánh dấu PAID khi đã thanh toán xong.
+//  Lưu ý: phiên đã có lượt đặt giá thì KHÔNG cho sửa/xóa (chỉ hủy) — bảo vệ
+//  tính toàn vẹn dữ liệu (đáp ứng 3.1.5 Xử lý ngoại lệ).
+// ====================================================================
+
 import { store } from '../store.js';
 import {
   fmtVND, fmtDate, fmtDateInput, statusVN, categoryVN, categoryIcon,

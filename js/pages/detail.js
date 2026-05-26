@@ -1,12 +1,27 @@
+// ====================================================================
+//  pages/detail.js — Trang chi tiết 1 phiên đấu giá (realtime bidding)
+// --------------------------------------------------------------------
+//  Đáp ứng các yêu cầu:
+//   • 3.1.3 Tham gia đấu giá: form đặt giá, validate, cập nhật leader.
+//   • 3.1.6 GUI: màn hình đấu giá realtime (đồng hồ đếm ngược + giá nhảy).
+//   • 3.2.1 Auto-Bid: modal cấu hình maxBid + increment, hiển thị badge.
+//   • 3.2.3 Anti-Sniping: countdown nhảy lên khi có bid giây cuối.
+//   • 3.2.4 Realtime Observer: subscribe store.bus + BroadcastChannel.
+//   • 3.2.5 Bid History Visualization: biểu đồ giá Chart.js (xem cuối file).
+//  Cleanup: _cleanup() gỡ tất cả listener + timer + chart khi rời trang
+//  để tránh memory leak / chồng event handler.
+// ====================================================================
+
 import { store } from '../store.js';
 import {
   fmtVND, fmtDate, fmtCountdown, statusVN, categoryVN, categoryIcon,
   el, openModal, closeModal, toast,
 } from '../utils.js';
 
-let _unsubs = [];
-let _timer = null;
-let _chart = null;
+// State của trang — module-level để các hàm renderXxx có thể tái sử dụng.
+let _unsubs = [];          // danh sách hàm hủy đăng ký listener
+let _timer = null;         // setInterval cho countdown
+let _chart = null;         // instance Chart.js (tái sử dụng để tránh nháy)
 let _currentAuctionId = null;
 
 export function renderDetail(container, id) {
@@ -306,15 +321,38 @@ function renderHistory() {
   }
 }
 
+// ====================================================================
+//  BIỂU ĐỒ GIÁ ĐẤU THEO THỜI GIAN — Yêu cầu 3.2.5 (Realtime Price Curve)
+// --------------------------------------------------------------------
+//  Mục tiêu:
+//   • Vẽ đường giá đấu cao nhất theo timeline.
+//   • Cập nhật MƯỢT khi có bid mới mà KHÔNG cần refresh trang.
+//   • Trục X = thời gian (timestamp), Trục Y = mức giá hiện tại.
+//  Kỹ thuật:
+//   • Chart.js v4.4 + adapter date-fns cho trục thời gian.
+//   • Bezier monotone (tension 0.42) → đường cong tự nhiên, không gãy.
+//   • Gradient nền canvas (đậm → trong suốt) để nhấn mạnh xu hướng tăng.
+//   • Tooltip Việt hoá đẹp ("🕒 ngày giờ" + "💰 số tiền").
+//   • Tick trục Y format VN: "25 tr", "1 tỷ", "500k".
+// ====================================================================
+
+/** Tạo gradient dọc (xanh đậm trên đỉnh → trong suốt phía dưới). */
 function _buildChartGradient(ctx, height) {
-  // Gradient nền — đậm trên đỉnh, mờ dần xuống dưới
   const g = ctx.createLinearGradient(0, 0, 0, height || 280);
-  g.addColorStop(0, 'rgba(37, 99, 235, 0.32)');
-  g.addColorStop(0.55, 'rgba(37, 99, 235, 0.10)');
-  g.addColorStop(1, 'rgba(37, 99, 235, 0.00)');
+  g.addColorStop(0, 'rgba(37, 99, 235, 0.32)');     // đỉnh: xanh đậm
+  g.addColorStop(0.55, 'rgba(37, 99, 235, 0.10)');  // giữa: xanh nhạt
+  g.addColorStop(1, 'rgba(37, 99, 235, 0.00)');     // đáy: trong suốt
   return g;
 }
 
+/**
+ * renderChart — vẽ hoặc cập nhật biểu đồ giá.
+ * - Mảng points luôn bắt đầu bằng (startTime, startingPrice) để đường giá
+ *   khởi đầu từ giá khởi điểm thay vì bid đầu tiên.
+ * - Nếu phiên RUNNING, thêm 1 điểm "hiện tại" để đường được kéo tới NOW.
+ * - Cùng instance _chart được tái sử dụng — chỉ cập nhật data + gradient
+ *   tránh tạo lại biểu đồ gây nháy màn hình.
+ */
 function renderChart() {
   const cnv = document.getElementById('priceChart');
   if (!cnv) return;

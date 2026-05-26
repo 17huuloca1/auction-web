@@ -1,4 +1,15 @@
-// Util helpers
+// ====================================================================
+//  utils.js — Hàm tiện ích dùng chung toàn ứng dụng
+// --------------------------------------------------------------------
+//  Bao gồm:
+//   • Định dạng số tiền VND, ngày giờ Việt Nam, countdown.
+//   • Dịch trạng thái phiên đấu giá / loại sản phẩm sang tiếng Việt.
+//   • Hàm el() — virtual-DOM-lite tạo phần tử nhanh với attrs + children.
+//   • toast() — popup thông báo góc trên bên phải (success/error/warning).
+//   • openModal() / closeModal() — đơn giản hóa thao tác modal.
+// ====================================================================
+
+/** Định dạng số tiền sang chuỗi VND, ví dụ: 25000000 → "25.000.000 ₫" */
 export const fmtVND = (n) =>
   (Number(n) || 0).toLocaleString('vi-VN') + ' ₫';
 

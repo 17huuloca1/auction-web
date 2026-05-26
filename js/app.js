@@ -1,5 +1,16 @@
 // ====================================================================
-// App entry point: router đơn giản theo hash + auth + modal
+//  app.js — Điểm khởi động ứng dụng (entry point)
+// --------------------------------------------------------------------
+//  TRÁCH NHIỆM:
+//   • Router đơn giản dựa trên URL hash (#/, #/auction/abc, #/settings…).
+//   • Xử lý đăng nhập / đăng ký / đăng xuất qua modal.
+//   • Xử lý modal "Nạp tiền" (top-up): chọn mức nhanh, nhập tay,
+//     chọn phương thức, tính trước số dư sau khi nạp.
+//   • Đồng bộ thanh topbar (tên, badge, số dư) mỗi khi store phát event
+//     'auth' hoặc 'change' — Observer Pattern ở tầng UI.
+//   • Re-render route hiện tại (settings/profile) khi auth state đổi.
+//  Lưu ý: tất cả logic nghiệp vụ đều được ủy thác cho store (Singleton)
+//  — app.js chỉ làm "kết dính" giữa DOM và store.
 // ====================================================================
 
 import { store } from './store.js';
@@ -15,14 +26,19 @@ store.setToastFn(toast);
 
 const app = document.getElementById('app');
 
+/**
+ * parseHash — phân tích URL hash thành route + tham số.
+ * Ví dụ:  #/auction/a_1  →  { route: 'detail', id: 'a_1' }
+ *          #/settings      →  { route: 'settings' }
+ */
 function parseHash() {
   const h = location.hash.slice(1) || '/';
   if (h === '/' || h === '') return { route: 'home' };
   const parts = h.split('/').filter(Boolean);
   if (parts[0] === 'auction' && parts[1]) return { route: 'detail', id: parts[1] };
-  if (parts[0] === 'seller') return { route: 'seller' };
-  if (parts[0] === 'admin') return { route: 'admin' };
-  if (parts[0] === 'profile') return { route: 'profile' };
+  if (parts[0] === 'seller')   return { route: 'seller' };
+  if (parts[0] === 'admin')    return { route: 'admin' };
+  if (parts[0] === 'profile')  return { route: 'profile' };
   if (parts[0] === 'settings') return { route: 'settings' };
   return { route: 'home' };
 }
@@ -56,7 +72,9 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// === Auth UI ===
+// ====================================================================
+//  CÁC THAM CHIẾU DOM TIỀN ÍCH (lấy 1 lần, dùng nhiều nơi)
+// ====================================================================
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -156,13 +174,24 @@ function syncAuthUI() {
 store.bus.on('auth', syncAuthUI);
 store.bus.on('change', syncAuthUI);
 
-// Re-render trang hiện tại khi auth thay đổi (đặc biệt cho /profile, /settings)
+// Khi auth state thay đổi (login/logout/topup làm đổi số dư), các trang
+// phụ thuộc vào user (profile, settings) cần re-render để dữ liệu đúng.
+// Trang home/detail/seller/admin tự subscribe vào store.bus nên không cần.
 store.bus.on('auth', () => {
   const { route } = parseHash();
   if (route === 'profile' || route === 'settings') navigate();
 });
 
-// === Top-up modal ===
+// ====================================================================
+//  MODAL NẠP TIỀN — tính năng wallet (chi tiết trong store.topUp)
+// --------------------------------------------------------------------
+//  Luồng:
+//   1) User bấm "Nạp tiền" → mở modal, hiển thị số dư hiện tại, reset form.
+//   2) Chọn nhanh 1 trong 6 mức (100k–10M) hoặc nhập tay → tính "số dư
+//      sau khi nạp" hiển thị trước khi submit.
+//   3) Submit form → gọi store.topUp(); store ghi giao dịch, cộng balance,
+//      phát event 'auth' → topbar và trang settings tự cập nhật.
+// ====================================================================
 topupBtn?.addEventListener('click', () => {
   const u = store.currentUser();
   if (!u) { toast('error', 'Chưa đăng nhập', 'Vui lòng đăng nhập trước khi nạp tiền'); return; }

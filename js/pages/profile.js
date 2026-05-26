@@ -1,3 +1,14 @@
+// ====================================================================
+//  pages/profile.js — Trang hồ sơ cá nhân
+// --------------------------------------------------------------------
+//  Hiển thị thông tin tài khoản đăng nhập + thống kê hoạt động:
+//   • Tổng số lượt bid đã đặt.
+//   • Số phiên đấu giá đang dẫn đầu.
+//   • Số phiên đã thắng.
+//  (Thông tin chi tiết hơn — đổi mật khẩu, lịch sử giao dịch, nạp tiền —
+//   chuyển sang trang /settings.)
+// ====================================================================
+
 import { store } from '../store.js';
 import { fmtVND, fmtDate, statusVN, el } from '../utils.js';
 

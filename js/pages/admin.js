@@ -1,3 +1,14 @@
+// ====================================================================
+//  pages/admin.js — Bảng điều khiển dành cho Quản trị viên (Admin)
+// --------------------------------------------------------------------
+//  Yêu cầu 3.1.1 ("Admin: Quản trị và điều hành toàn bộ hệ thống").
+//  Cho phép:
+//   • Xem thống kê tổng quan: số user, số phiên đấu giá, tổng lượt bid.
+//   • Quản lý người dùng: xem danh sách, xóa user (trừ chính mình).
+//   • Giám sát mọi phiên đấu giá: trạng thái, người dẫn đầu, giá hiện tại.
+//   • Hủy phiên đấu giá bất thường (đáp ứng 3.1.5).
+// ====================================================================
+
 import { store } from '../store.js';
 import {
   fmtVND, fmtDate, statusVN, categoryVN, categoryIcon, el, toast,

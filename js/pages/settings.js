@@ -1,10 +1,22 @@
 // ====================================================================
-// Trang Cài đặt tài khoản: đổi mật khẩu, email, SĐT + lịch sử giao dịch
+//  pages/settings.js — Trang "Cài đặt tài khoản"
+// --------------------------------------------------------------------
+//  Bao gồm 3 tab:
+//   1) 👤 Thông tin liên hệ — họ tên, email, số điện thoại (đổi được);
+//      username là khóa định danh nên bị disable.
+//   2) 🔐 Đổi mật khẩu — yêu cầu nhập mật khẩu hiện tại + xác nhận
+//      mật khẩu mới (chống đổi nhầm khi để màn hình bỏ ngỏ).
+//   3) 📊 Lịch sử giao dịch — gồm các giao dịch TOP_UP (nạp tiền) và
+//      BID_WON (phiên đã thắng, tổng hợp từ auctions). Hiển thị 4 stat
+//      tổng quan ở trên + bảng chi tiết bên dưới.
+//  Trên đầu trang là "Wallet card" hiển thị số dư hiện tại + tổng đã
+//  nạp và nút "Nạp tiền ngay" mở modal toàn cục.
 // ====================================================================
 
 import { store } from '../store.js';
 import { fmtVND, fmtDate, el, toast, openModal } from '../utils.js';
 
+// Danh sách hàm hủy đăng ký event — gỡ khi rời trang để tránh chồng listener.
 let _unsubs = [];
 
 const METHOD_LABEL = {

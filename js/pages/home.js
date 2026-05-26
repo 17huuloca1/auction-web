@@ -1,9 +1,19 @@
+// ====================================================================
+//  pages/home.js — Trang chủ: danh sách tổng hợp các phiên đấu giá
+// --------------------------------------------------------------------
+//  Đáp ứng yêu cầu 3.1.6 GUI - "Danh sách tổng hợp các phiên đấu giá".
+//  Cho phép lọc theo: trạng thái (Đang diễn ra / Sắp mở / Đã kết thúc / Đã hủy),
+//  loại sản phẩm, và tìm theo tên. Tự động cập nhật mỗi giây để countdown
+//  hiển thị đúng + subscribe store.bus để bid mới về là refresh card.
+// ====================================================================
+
 import { store } from '../store.js';
 import { fmtVND, fmtCountdown, statusVN, categoryIcon, categoryVN, el } from '../utils.js';
 
+// State filter của trang — giữ ở module-level để khi route quay lại còn nhớ.
 let state = { filter: 'ALL', search: '', category: 'ALL' };
-let _unsubs = [];
-let _timer = null;
+let _unsubs = [];   // danh sách hàm hủy đăng ký event
+let _timer = null;  // setInterval cập nhật countdown
 
 export function renderHome(container) {
   _cleanup();
