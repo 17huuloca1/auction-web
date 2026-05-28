@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hạt Điều Shop - Hạt điều Bình Phước chính hãng</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥜</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <div class="container">
+        <div class="header-top-content">
+          <span><i class="fas fa-phone"></i> Hotline: 0901 234 567</span>
+          <span><i class="fas fa-truck"></i> Miễn phí ship đơn từ 500K</span>
+          <span><i class="fas fa-shield-alt"></i> Cam kết hạt điều Bình Phước chính hãng</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-main">
+      <div class="container">
+        <div class="header-main-content">
+          <a href="#/" class="logo">
+            <span class="logo-icon">🥜</span>
+            <div class="logo-text">
+              <span class="logo-name">Hạt Điều Shop</span>
+              <span class="logo-tagline">Hạt điều Bình Phước chính hãng</span>
+            </div>
+          </a>
+
+          <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Tìm kiếm hạt điều..." />
+            <button id="searchBtn"><i class="fas fa-search"></i></button>
+          </div>
+
+          <div class="header-actions">
+            <a href="#/cart" class="action-btn cart-btn" title="Giỏ hàng">
+              <i class="fas fa-shopping-cart"></i>
+              <span class="cart-count" id="cartCount" style="display:none">0</span>
+            </a>
+            <div class="user-menu" id="userMenu">
+              <button class="action-btn user-btn" id="userBtn">
+                <i class="fas fa-user"></i>
+              </button>
+              <div class="user-dropdown" id="userDropdown">
+                <!-- Dynamic content -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav-bar">
+      <div class="container">
+        <div class="nav-content" id="navCategories">
+          <a href="#/" class="nav-link active"><i class="fas fa-home"></i> Trang chủ</a>
+          <a href="#/products" class="nav-link"><i class="fas fa-store"></i> Sản phẩm</a>
+          <!-- Categories loaded dynamically -->
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main id="app" class="main-content">
+    <div class="loading-screen">
+      <div class="spinner"></div>
+      <p>Đang tải...</p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-logo">
+            <span class="logo-icon">🥜</span>
+            <span class="logo-name">Hạt Điều Shop</span>
+          </div>
+          <p>Chuyên cung cấp các sản phẩm hạt điều Bình Phước chất lượng cao. Cam kết 100% nguyên chất, không hóa chất bảo quản.</p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-tiktok"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Về chúng tôi</h4>
+          <ul>
+            <li><a href="#/about">Giới thiệu</a></li>
+            <li><a href="#/products">Sản phẩm</a></li>
+            <li><a href="#">Chính sách bảo hành</a></li>
+            <li><a href="#">Chính sách đổi trả</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Hỗ trợ khách hàng</h4>
+          <ul>
+            <li><a href="#">Hướng dẫn mua hàng</a></li>
+            <li><a href="#">Phương thức thanh toán</a></li>
+            <li><a href="#">Chính sách giao hàng</a></li>
+            <li><a href="#">Câu hỏi thường gặp</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Liên hệ</h4>
+          <ul class="contact-info">
+            <li><i class="fas fa-map-marker-alt"></i> 123 Đường Hạt Điều, Bình Phước</li>
+            <li><i class="fas fa-phone"></i> 0901 234 567</li>
+            <li><i class="fas fa-envelope"></i> info@hatdieu.shop</li>
+            <li><i class="fas fa-clock"></i> 8:00 - 21:00 (T2 - CN)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Hạt Điều Shop. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal" id="authModalContent">
+      <!-- Dynamic content -->
+    </div>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
